@@ -88,11 +88,19 @@ jobs:
           </settings>
           EOF
 
-      - name: Log in to OpenShift registry
+      - name: Install oc CLI and login to OpenShift
         env:
           OC_TOKEN: ${{ secrets.OC_TOKEN }}
         run: |
-          echo "$OC_TOKEN" | docker login "$REGISTRY" \
+          curl -sL https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/openshift-client-linux.tar.gz \
+            | tar xz oc
+          sudo mv oc /usr/local/bin/
+          oc login --token="$OC_TOKEN" --server="$OC_SERVER"
+          oc project "$OC_NAMESPACE"
+
+      - name: Log in to OpenShift registry
+        run: |
+          oc whoami --show-token | docker login "$REGISTRY" \
             -u "user" --password-stdin
 
       - name: Build and push image
@@ -101,18 +109,8 @@ jobs:
           docker build --secret id=maven_settings,src=.m2/settings.xml -t "$IMAGE" .
           docker push "$IMAGE"
 
-      - name: Install oc CLI
-        run: |
-          curl -sL https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/openshift-client-linux.tar.gz \
-            | tar xz oc
-          sudo mv oc /usr/local/bin/
-
       - name: Deploy to OpenShift
-        env:
-          OC_TOKEN: ${{ secrets.OC_TOKEN }}
         run: |
-          oc login --token="$OC_TOKEN" --server="$OC_SERVER"
-          oc project "$OC_NAMESPACE"
           oc apply -f openshift/app.yaml
           oc rollout status deployment/api-busca-dados --timeout=10m
 
