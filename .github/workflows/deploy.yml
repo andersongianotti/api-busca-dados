@@ -95,6 +95,8 @@ jobs:
           curl -sL https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/openshift-client-linux.tar.gz \
             | tar xz oc
           sudo mv oc /usr/local/bin/
+          echo "Token length: ${#OC_TOKEN}"
+          echo "Token prefix: ${OC_TOKEN:0:30}..."
           oc login --token="$OC_TOKEN" --server="$OC_SERVER"
           oc project "$OC_NAMESPACE"
 
