@@ -108,7 +108,10 @@ jobs:
       - name: Build and push image
         run: |
           IMAGE="$REGISTRY/$OC_NAMESPACE/api-busca-dados:latest"
-          docker build --secret id=maven_settings,src=.m2/settings.xml -t "$IMAGE" .
+          docker buildx build \
+            --provenance=false --sbom=false \
+            --secret id=maven_settings,src=.m2/settings.xml \
+            --load -t "$IMAGE" .
           docker push "$IMAGE"
 
       - name: Deploy to OpenShift
