@@ -1,0 +1,31 @@
+name: Rollback
+
+on:
+  workflow_dispatch:
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+
+    env:
+      OC_SERVER: https://api.rm1.0a51.p1.openshiftapps.com:6443
+      OC_NAMESPACE: anderson-gianotti-dev
+
+    steps:
+      - name: Install oc CLI and login to OpenShift
+        env:
+          OC_TOKEN: ${{ secrets.OC_TOKEN }}
+        run: |
+          curl -sL https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/openshift-client-linux.tar.gz \
+            | tar xz oc
+          sudo mv oc /usr/local/bin/
+          oc login --token="$OC_TOKEN" --server="$OC_SERVER"
+          oc project "$OC_NAMESPACE"
+
+      - name: Rollback deployment
+        run: |
+          oc rollout undo deployment/api-busca-dados
+          oc rollout status deployment/api-busca-dados --timeout=10m
+
+      - name: Show route
+        run: oc get route api-busca-dados

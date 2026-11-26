@@ -107,7 +107,8 @@ jobs:
 
       - name: Build and push image
         run: |
-          IMAGE="$REGISTRY/$OC_NAMESPACE/api-busca-dados:latest"
+          SHORT_SHA="${GITHUB_SHA:0:7}"
+          IMAGE="$REGISTRY/$OC_NAMESPACE/api-busca-dados:$SHORT_SHA"
           docker buildx build \
             --provenance=false --sbom=false \
             --secret id=maven_settings,src=.m2/settings.xml \
@@ -116,6 +117,7 @@ jobs:
 
       - name: Deploy to OpenShift
         run: |
+          sed -i "s|api-busca-dados:latest|api-busca-dados:${GITHUB_SHA:0:7}|" openshift/app.yaml
           oc apply -f openshift/app.yaml
           oc rollout status deployment/api-busca-dados --timeout=10m
 
