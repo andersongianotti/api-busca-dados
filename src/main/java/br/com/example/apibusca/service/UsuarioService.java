@@ -4,6 +4,7 @@ import br.com.example.apibusca.dto.UsuarioRequest;
 import br.com.example.apibusca.model.Usuario;
 import br.com.example.apibusca.repository.UsuarioRepository;
 import br.com.example.cep.Endereco;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,7 @@ public class UsuarioService {
     private final CepService cepService;
     private final BCryptPasswordEncoder passwordEncoder;
 
+    @Autowired
     public UsuarioService(UsuarioRepository repository, CepService cepService) {
         this(repository, cepService, new BCryptPasswordEncoder());
     }
