@@ -5,5 +5,10 @@ public record UsuarioRequest(
         String email,
         String password,
         String phone,
-        String cep) {
+        String cep,
+        String logradouro,
+        String complemento,
+        String bairro,
+        String localidade,
+        String uf) {
 }

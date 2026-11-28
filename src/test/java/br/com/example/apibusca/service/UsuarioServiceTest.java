@@ -48,7 +48,7 @@ class UsuarioServiceTest {
     }
 
     private UsuarioRequest requestValido() {
-        return new UsuarioRequest("Anderson", "anderson@email.com", "senha123", "11999998888", "01310100");
+        return new UsuarioRequest("Anderson", "anderson@email.com", "senha123", "11999998888", "01310100", null, null, null, null, null);
     }
 
     private Usuario usuarioSalvo() {
@@ -98,7 +98,7 @@ class UsuarioServiceTest {
         when(repository.existsByEmail("a@b.com")).thenReturn(false);
         when(cepService.buscarEndereco("99999999")).thenReturn(Optional.empty());
 
-        UsuarioRequest req = new UsuarioRequest("Anderson", "a@b.com", "senha123", "11999998888", "99999999");
+        UsuarioRequest req = new UsuarioRequest("Anderson", "a@b.com", "senha123", "11999998888", "99999999", null, null, null, null, null);
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
                 () -> service.criar(req));
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
@@ -106,15 +106,32 @@ class UsuarioServiceTest {
 
     @Test
     void criar_shouldThrow400_whenPasswordTooShort() {
-        UsuarioRequest req = new UsuarioRequest("Anderson", "a@b.com", "123", "11999998888", "01310100");
+        UsuarioRequest req = new UsuarioRequest("Anderson", "a@b.com", "123", "11999998888", "01310100", null, null, null, null, null);
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
                 () -> service.criar(req));
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
     }
 
     @Test
+    void criar_shouldUseManualAddress_whenFieldsProvided() {
+        when(repository.existsByEmail("anderson@email.com")).thenReturn(false);
+        when(repository.save(any(Usuario.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        UsuarioRequest req = new UsuarioRequest("Anderson", "anderson@email.com", "senha123",
+                "11999998888", "01310100", "Rua das Flores", "casa 10", "Centro", "Campinas", "sp");
+        Usuario criado = service.criar(req);
+
+        assertEquals("Rua das Flores", criado.getLogradouro());
+        assertEquals("casa 10", criado.getComplemento());
+        assertEquals("Centro", criado.getBairro());
+        assertEquals("Campinas", criado.getLocalidade());
+        assertEquals("SP", criado.getUf());
+        verify(cepService, never()).buscarEndereco(any());
+    }
+
+    @Test
     void criar_shouldThrow400_whenEmailInvalid() {
-        UsuarioRequest req = new UsuarioRequest("Anderson", "email-invalido", "senha123", "11999998888", "01310100");
+        UsuarioRequest req = new UsuarioRequest("Anderson", "email-invalido", "senha123", "11999998888", "01310100", null, null, null, null, null);
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
                 () -> service.criar(req));
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
@@ -139,7 +156,7 @@ class UsuarioServiceTest {
                 new Endereco("20040-002", "Rua da Assembleia", null, "Centro", "Rio de Janeiro", "RJ")));
         when(repository.save(any(Usuario.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        UsuarioRequest req = new UsuarioRequest("Novo Nome", null, null, "21888887777", "20040002");
+        UsuarioRequest req = new UsuarioRequest("Novo Nome", null, null, "21888887777", "20040002", null, null, null, null, null);
         Usuario atualizado = service.atualizar("abc123", req);
 
         assertEquals("Novo Nome", atualizado.getName());
@@ -164,7 +181,7 @@ class UsuarioServiceTest {
         outro.setEmail("outro@email.com");
         when(repository.findByEmail("outro@email.com")).thenReturn(Optional.of(outro));
 
-        UsuarioRequest req = new UsuarioRequest(null, "outro@email.com", null, null, null);
+        UsuarioRequest req = new UsuarioRequest(null, "outro@email.com", null, null, null, null, null, null, null, null);
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
                 () -> service.atualizar("abc123", req));
         assertEquals(HttpStatus.CONFLICT, ex.getStatusCode());

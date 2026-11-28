@@ -54,7 +54,7 @@ public class UsuarioService {
         usuario.setEmail(request.email().trim());
         usuario.setPassword(passwordEncoder.encode(request.password()));
         usuario.setPhone(request.phone().trim());
-        aplicarEndereco(usuario, request.cep());
+        aplicarEndereco(usuario, request);
         Instant now = Instant.now();
         usuario.setCreatedAt(now);
         usuario.setUpdatedAt(now);
@@ -84,7 +84,7 @@ public class UsuarioService {
             usuario.setPhone(request.phone().trim());
         }
         if (request.cep() != null && !request.cep().isBlank()) {
-            aplicarEndereco(usuario, request.cep());
+            aplicarEndereco(usuario, request);
         }
         usuario.setUpdatedAt(Instant.now());
         return repository.save(usuario);
@@ -117,15 +117,34 @@ public class UsuarioService {
         }
     }
 
-    private void aplicarEndereco(Usuario usuario, String cep) {
-        Endereco endereco = cepService.buscarEndereco(cep)
+    private void aplicarEndereco(Usuario usuario, UsuarioRequest request) {
+        if (temEnderecoManual(request)) {
+            usuario.setCep(request.cep().replaceAll("\\D", ""));
+            usuario.setLogradouro(request.logradouro().trim());
+            usuario.setComplemento(blankToNull(request.complemento()));
+            usuario.setBairro(blankToNull(request.bairro()));
+            usuario.setLocalidade(request.localidade().trim());
+            usuario.setUf(request.uf().trim().toUpperCase());
+            return;
+        }
+        Endereco endereco = cepService.buscarEndereco(request.cep())
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST, "CEP não encontrado: " + cep));
+                        HttpStatus.BAD_REQUEST, "CEP não encontrado: " + request.cep()));
         usuario.setCep(endereco.cep());
         usuario.setLogradouro(endereco.logradouro());
         usuario.setComplemento(endereco.complemento());
         usuario.setBairro(endereco.bairro());
         usuario.setLocalidade(endereco.localidade());
         usuario.setUf(endereco.uf());
+    }
+
+    private boolean temEnderecoManual(UsuarioRequest request) {
+        return request.logradouro() != null && !request.logradouro().isBlank()
+                && request.localidade() != null && !request.localidade().isBlank()
+                && request.uf() != null && !request.uf().isBlank();
+    }
+
+    private String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 }
