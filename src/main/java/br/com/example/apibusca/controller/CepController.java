@@ -1,6 +1,6 @@
 package br.com.example.apibusca.controller;
 
-import br.com.example.cep.Endereco;
+import br.com.example.apibusca.dto.EnderecoResponse;
 import br.com.example.apibusca.service.CepService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,8 +19,9 @@ public class CepController {
     }
 
     @GetMapping("/{cep}")
-    public ResponseEntity<Endereco> buscar(@PathVariable String cep) {
+    public ResponseEntity<EnderecoResponse> buscar(@PathVariable String cep) {
         return cepService.buscarEndereco(cep)
+                .map(EnderecoResponse::from)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }

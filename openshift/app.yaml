@@ -23,6 +23,12 @@ spec:
           image: image-registry.openshift-image-registry.svc:5000/anderson-gianotti-dev/api-busca-dados:latest
           ports:
             - containerPort: 8080
+          env:
+            - name: MONGODB_URI
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-atlas-uri
+                  key: uri
           securityContext:
             readOnlyRootFilesystem: true
             allowPrivilegeEscalation: false
