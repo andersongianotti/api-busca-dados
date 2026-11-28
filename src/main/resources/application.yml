@@ -2,9 +2,8 @@ server:
   port: 8080
 
 spring:
-  data:
-    mongodb:
-      uri: ${MONGODB_URI:mongodb://localhost:27017/userdb}
+  mongodb:
+    uri: ${MONGODB_URI:mongodb://localhost:27017/userdb}
 
 management:
   endpoints:
